@@ -204,12 +204,12 @@
                     type: 'line',// Tipo de gráfica
                     data: {
                         labels: fechas.map((fecha) => {
-                            // Extraer el mes y el año de la fecha
+                            //Extraemos el mes y el año de la fecha
                             var fechaArray = fecha.split("-");
                             var mes = parseInt(fechaArray[1]) - 1;
                             var year = fechaArray[0];
 
-                            //Devolver el nombre del mes o el año si es enero
+                            //Devolvemos el nombre del mes o el año si es enero
                             return mes === 0 ? year : meses[mes];
                         }),
                         datasets: [
@@ -244,7 +244,7 @@
                                         fontSize: 14
                                     },
                                     ticks: {
-                                        //Escalar el eje Y a partir de los valores en el vector cambio, para que se pueda apreciar el cambio a medida que pasa el tiempo
+                                        //Escalamos el eje Y a partir de los valores en el vector cambio, para que se pueda apreciar el cambio a medida que pasa el tiempo
                                         beginAtZero: false,
                                         suggestedMax: maxIndexOfTwoArrays(numeros, numeros2),
                                     },
@@ -269,7 +269,7 @@
                             //Devolver el nombre del mes o el año si es enero
                             return mes === 0 ? year : meses[mes];
                         }),
-                        //Definir los datos del eje Y a partir de los números
+                        //Definimos los datos del eje Y a partir de los números
                         datasets: [
                             {
                                 label: (document.getElementById("fromCurrency").value + "/" + document.getElementById("toCurrency").value),
@@ -306,7 +306,7 @@
                                         fontSize: 14
                                     },
                                     ticks: {
-                                        //Escalar el eje Y a partir de los valores en el vector cambio, para que se pueda apreciar el cambio a medida que pasa el tiempo
+                                        //Escalamos el eje Y a partir de los valores en el vector cambio, para que se pueda apreciar el cambio a medida que pasa el tiempo
                                         beginAtZero: false,
                                         suggestedMax: Math.max(...numeros),
                                     },
@@ -331,13 +331,13 @@
             }
         }
         function showHideElements() {
-            // Obtener la casilla de verificación
+            //Obtenemos la casilla de verificación
             const checkbox = document.getElementById('casilla');
 
-            // Obtener el div que contiene los elementos ocultos
+            //Obtenemos el div que contiene los elementos ocultos
             const elementsDiv = document.getElementById('additionalSelectors');
 
-            // Mostrar u ocultar los elementos según si la casilla está marcada o no
+            //Mostramos u ocultamos los elementos según si la casilla está marcada o no
             if (checkbox.checked) {
                 elementsDiv.style.display = 'block';
             } else {
