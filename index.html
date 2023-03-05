@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Index</title>
+    <link rel="stylesheet" href="estilo.css">
+</head>
+
+<body>
+    <h1>¿Cómo ha evolucionado el tipo de cambio a lo largo de la historia?</h1>
+    <form>
+        <!-- Seleccionables fijos por defecto -->
+        <!-- Primero moneda -->
+        <label>Moneda de origen:</label>
+        <select id="fromCurrency">
+            <option value="USD">Dólar estadounidense (USD)</option>
+            <option value="EUR">Euro (EUR)</option>
+            <option value="JPY">Yen japonés (JPY)</option>
+            <option value="GBP">Libra esterlina (GBP)</option>
+            <option value="AUD">Dólar australiano (AUD)</option>
+            <option value="CAD">Dólar canadiense (CAD)</option>
+        </select>
+        <br><br>
+        <!-- Luego la moneda con la que establecemos la relacion -->
+        <label>Moneda de destino:</label>
+        <select id="toCurrency">
+            <option value="EUR">Euro (EUR)</option>
+            <option value="USD">Dólar estadounidense (USD)</option>
+            <option value="JPY">Yen japonés (JPY)</option>
+            <option value="GBP">Libra esterlina (GBP)</option>
+            <option value="AUD">Dólar australiano (AUD)</option>
+            <option value="CAD">Dólar canadiense (CAD)</option>
+        </select>
+        <br><br>
+        <!-- Fecha de inicio -->
+        <label>Desde el año:</label>
+        <input type="date" id="fromDate" min="2000-01-01" max="2023-05-31" value="2010-01-01">
+        <br><br>
+        <!-- Fecha final -->
+        <label>Hasta el año:</label>
+        <input type="date" id="toDate" min="2000-01-01" max="2023-05-31" value="2020-01-01">
+        <br><br>
+
+        <!-- Checkbox en funcino de la cual mostramos o no el siguiente seleccionable, llamando a la funcion showHideElements -->
+        <label>
+            <input type="checkbox" name="opcion1" id="casilla" value="1" onclick="showHideElements()"> Comparar con otra
+            moneda
+        </label>
+        <br><br>
+
+        <!-- Seleccionables no visible por defecto, solo en caso de que se pulse la casilla -->
+        <div id="additionalSelectors" style="display: none;">
+            <label>Moneda de comparación:</label>
+            <select id="compareCurrency">
+                <option value="EUR">Euro (EUR)</option>
+                <option value="USD">Dólar estadounidense (USD)</option>
+                <option value="JPY">Yen japonés (JPY)</option>
+                <option value="GBP">Libra esterlina (GBP)</option>
+                <option value="AUD">Dólar australiano (AUD)</option>
+                <option value="CAD">Dólar canadiense (CAD)</option>
+            </select>
+            <br><br>
+        </div>
+
+        <!--Boton para generar grafico -->
+        <button type="button" onclick="makeRequest()">Generar</button>
+    </form>
+    <!-- Grafico generado en el script -->
+    <div>
+        <canvas id="rateChart" width="400" height="120"></canvas>
+    </div>
+
+    <!-- Instalamos chart.js para que funcione el grafico -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@latest/dist/Chart.min.js"></script>
+
+    <script>
+
+        //Funcion principal en la que hacemos la peticion y obtenemoos y tratamos los datos
+        function makeRequest() {
+            var fromDate = document.getElementById("fromDate").value;
+            var toDate = document.getElementById("toDate").value;
+            // Convertir las fechas en milisegundos
+            var fromTime = Date.parse(fromDate);
+            var toTime = Date.parse(toDate);
+            // Comparar las fechas
+            if (fromTime > toTime) {
+                alert("La fecha de inicio no puede ser mayor que la fecha de fin.");
+                try {
+                    // Código que puede lanzar un error
+                    throw new Error("Se han introducido fechas incorrectas");
+                } catch (error) {
+                    // Manejar la excepción capturada
+                    console.log(error.message);
+                }
+
+            }
+
+            var fromCurrency = document.getElementById("fromCurrency").value;
+            var toCurrency = document.getElementById("toCurrency").value;
+            var cambio = [];
+            var fechas = [];
+
+
+            var checkbox = document.getElementById("casilla");
+            var estaMarcado = checkbox.checked;
+            //Comprobamos si esta marcado antes de intentar leer el seleccionable
+            if (estaMarcado) {
+                var toCurrency2 = document.getElementById("compareCurrency").value;
+            }
+            console.log(estaMarcado);
+
+            var url = "https://api.frankfurter.app/" + fromDate + ".." + toDate + "?from=" + fromCurrency;
+            console.log(url);
+            fetch(url)
+                .then(result => result.json())
+                .then((output) => {
+                    /*Accedemos a rates, que es donde estan los datos que queremso*/
+                    ObjJson = output.rates;
+                    /*Obtenemos las claves del json, que son las fechas de registro*/
+                    fechas = Object.keys(ObjJson)
+                    console.log(fechas);
+                    /*Creamos un vector que almacenara el tipo de cambio para la mondea seleccionada*/
+                    cambio = [];
+                    /*Guardamos en un vector cada uno de los values del objeto, que recordemos tiene como claves las fechas 
+                    (ya extraidas) y como valores un diccionario, con clave MONEDA y valor TIPO DE CAMBIO*/
+                    datos = Object.values(ObjJson);
+                    for (let date = 0; date < fechas.length; date++) {
+                        /*Añadimos a cambio, los tipos de cambios, accediendo al diccionario de cada una de las fechas,y luego a la moneda que queremos*/
+                        cambio.push(datos[date][toCurrency]);
+                    }
+                    if (estaMarcado) {
+                        cambio2 = [];
+                        for (let date = 0; date < fechas.length; date++) {
+                            /*Añadimos a cambio, los tipos de cambios, accediendo al diccionario de cada una de las fechas,y luego a la moneda que queremos*/
+                            cambio2.push(datos[date][toCurrency2]);
+                        }
+                        console.log(cambio2);
+                    }
+                    //console.log(cambio);
+
+                    /*Una vez estan todos los datos preparados llamamos a la funcion que genera el grafico*/
+                    if (estaMarcado) {
+                        crearGrafico(fechas, cambio, cambio2);
+                    }
+                    else {
+                        var empty = [];
+                        crearGrafico(fechas, cambio, empty);
+                    }
+
+
+                }).catch(error => console.error(err));
+
+
+        }
+
+        //Variable global para poder acceder a ella y borrala despues del primer grafico
+        var myChart;
+
+        function crearGrafico(fechas, numeros, numeros2) {
+            var checkbox = document.getElementById("casilla");
+            var estaMarcado = checkbox.checked;
+            //Obtenemos la variable en la que se encuentra el grafic para poder modificarlo
+            var rateCanvas = document.getElementById("rateChart");
+
+            //Borramos el grafico anterior en caso de que exista para que no haya problemas 
+            if (myChart) {
+                myChart.destroy();
+            }
+
+            //Array para almacenar los nombres de los meses para el grafico
+            var meses = [
+                "Ene",
+                "Feb",
+                "Mar",
+                "Abr",
+                "May",
+                "Jun",
+                "Jul",
+                "Ago",
+                "Sep",
+                "Oct",
+                "Nov",
+                "Dic"
+            ];
+
+            if (estaMarcado) {
+                etiquetas = []
+                const datos1 = {
+                    label: (document.getElementById("fromCurrency").value + "/" + document.getElementById("toCurrency").value),
+                    data: numeros, // La data es un arreglo que debe tener la misma cantidad de valores que la cantidad de etiquetas
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)', // Color de fondo
+                    borderColor: 'rgba(54, 162, 235, 1)', // Color del borde
+                    borderWidth: 1,// Ancho del borde
+                };
+                const datos2 = {
+                    label: (document.getElementById("fromCurrency").value + "/" + document.getElementById("compareCurrency").value),
+                    data: numeros2, // La data es un arreglo que debe tener la misma cantidad de valores que la cantidad de etiquetas
+                    backgroundColor: 'rgba(255, 159, 64, 0.2)',// Color de fondo
+                    borderColor: 'rgba(255, 159, 64, 1)',// Color del borde
+                    borderWidth: 1,// Ancho del borde
+                };
+                myChart = new Chart(rateCanvas, {
+                    type: 'line',// Tipo de gráfica
+                    data: {
+                        labels: fechas.map((fecha) => {
+                            // Extraer el mes y el año de la fecha
+                            var fechaArray = fecha.split("-");
+                            var mes = parseInt(fechaArray[1]) - 1;
+                            var year = fechaArray[0];
+
+                            //Devolver el nombre del mes o el año si es enero
+                            return mes === 0 ? year : meses[mes];
+                        }),
+                        datasets: [
+                            datos1,
+                            datos2
+                        ]
+                    },
+                    options: {
+                        title: {
+                            display: true,
+                            text: "Evlocuión del tipo de cambio " + (document.getElementById("fromCurrency").value + "/" + document.getElementById("toCurrency").value) +
+                                " entre " + document.getElementById("fromDate").value + " y " + document.getElementById("toDate").value + " comparado con " +
+                                (document.getElementById("fromCurrency").value + "/" + document.getElementById("compareCurrency").value),
+                            fontStyle: "bold",
+                            fontSize: 18
+                        },
+                        scales: {
+                            xAxes: [{
+                                scaleLabel: {
+                                    display: true,
+                                    labelString: 'Eje temporal',
+                                    fontStyle: "bold",
+                                    fontSize: 14
+                                }
+                            }],
+                            yAxes: [
+                                {
+                                    scaleLabel: {
+                                        display: true,
+                                        labelString: "Tipo de cambio",
+                                        fontStyle: "bold",
+                                        fontSize: 14
+                                    },
+                                    ticks: {
+                                        //Escalar el eje Y a partir de los valores en el vector cambio, para que se pueda apreciar el cambio a medida que pasa el tiempo
+                                        beginAtZero: false,
+                                        suggestedMax: maxIndexOfTwoArrays(numeros, numeros2),
+                                    },
+                                },
+                            ],
+                        },
+                    }
+                });
+            }
+            else {
+                //Creamos un nuevo objeto Chart y definir la configuración del gráfico
+                myChart = new Chart(rateCanvas, {
+                    type: "line",
+                    data: {
+                        //Definir las etiquetas del eje X a partir de las fechas
+                        labels: fechas.map((fecha) => {
+                            // Extraer el mes y el año de la fecha
+                            var fechaArray = fecha.split("-");
+                            var mes = parseInt(fechaArray[1]) - 1;
+                            var year = fechaArray[0];
+
+                            //Devolver el nombre del mes o el año si es enero
+                            return mes === 0 ? year : meses[mes];
+                        }),
+                        //Definir los datos del eje Y a partir de los números
+                        datasets: [
+                            {
+                                label: (document.getElementById("fromCurrency").value + "/" + document.getElementById("toCurrency").value),
+                                data: numeros,
+                                borderColor: "rgba(255, 99, 132, 1)",
+                                borderWidth: 1,
+                                fill: false,
+                            },
+                        ],
+                    },
+                    options: {
+                        title: {
+                            display: true,
+                            text: "Evlocuión del tipo de cambio " + (document.getElementById("fromCurrency").value + "/" + document.getElementById("toCurrency").value) +
+                                " entre " + document.getElementById("fromDate").value + " y " + document.getElementById("toDate").value,
+                            fontStyle: "bold",
+                            fontSize: 18
+                        },
+                        scales: {
+                            xAxes: [{
+                                scaleLabel: {
+                                    display: true,
+                                    labelString: 'Eje temporal',
+                                    fontStyle: "bold",
+                                    fontSize: 14
+                                }
+                            }],
+                            yAxes: [
+                                {
+                                    scaleLabel: {
+                                        display: true,
+                                        labelString: "Tipo de cambio",
+                                        fontStyle: "bold",
+                                        fontSize: 14
+                                    },
+                                    ticks: {
+                                        //Escalar el eje Y a partir de los valores en el vector cambio, para que se pueda apreciar el cambio a medida que pasa el tiempo
+                                        beginAtZero: false,
+                                        suggestedMax: Math.max(...numeros),
+                                    },
+                                },
+                            ],
+                        },
+                    }
+                });
+            }
+
+
+        }
+
+
+        function maxIndexOfTwoArrays(arr1, arr2) {
+            const max1 = Math.max(...arr1);
+            const max2 = Math.max(...arr2);
+            if (max1 > max2) {
+                return max1;
+            } else {
+                return max2;
+            }
+        }
+        function showHideElements() {
+            // Obtener la casilla de verificación
+            const checkbox = document.getElementById('casilla');
+
+            // Obtener el div que contiene los elementos ocultos
+            const elementsDiv = document.getElementById('additionalSelectors');
+
+            // Mostrar u ocultar los elementos según si la casilla está marcada o no
+            if (checkbox.checked) {
+                elementsDiv.style.display = 'block';
+            } else {
+                elementsDiv.style.display = 'none';
+            }
+        }
+
+    </script>
